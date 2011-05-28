@@ -1,4 +1,4 @@
-var Planet, Planet2, Planet3, Planet4, PlanetType, Saturn, SaturnMoon, func, funcs, getTime, loops, name, newTime, rotate, rotate2, rotatePoly, time;
+var Planet, Planet2, Planet3, Planet4, PlanetType, Saturn, SaturnMoon, a, each, eachSeries, end, i, interval, keys, log, loops, period, planet, results, rotate, rotate2, rotateG, rotatePoly, run, start, test, tests, time, wait;
 var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, parent) {
   for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; }
   function ctor() { this.constructor = child; }
@@ -6,6 +6,14 @@ var __hasProp = Object.prototype.hasOwnProperty, __extends = function(child, par
   child.prototype = new ctor;
   child.__super__ = parent.prototype;
   return child;
+};
+log = function(x) {
+  return console.log(x);
+};
+eachSeries = _.eachSeries, each = _.each, keys = _.keys, each = _.each, wait = _.wait, interval = _.interval, time = _.time;
+tests = {};
+test = function(name, func) {
+  return tests[name] = func;
 };
 Planet = (function() {
   function Planet() {
@@ -78,114 +86,325 @@ PlanetType = {
     return planet.rotations++;
   }
 };
-getTime = function() {
-  return (new Date()).getTime();
+period = 1000;
+loops = 6e7;
+results = {};
+run = function() {
+  return eachSeries(tests, function(func, key, cb) {
+    var count, end, i, start;
+    if (cb == null) {
+      cb = function() {};
+    }
+    count = 0;
+    start = time();
+    for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
+      func();
+    }
+    end = time();
+    results[key] = end - start;
+    log("" + key + ": " + (end - start));
+    return cb();
+  }, function() {});
 };
-loops = 1e8;
-funcs = {};
-funcs['double proto'] = function() {
-  var i, planet;
-  planet = new Saturn();
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    planet.rotate();
-  }
-  return true;
-};
-funcs['single proto'] = function() {
-  var i, planet;
-  planet = new Planet();
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    planet.rotate();
-  }
-  return true;
-};
-funcs['triple proto'] = function() {
-  var i, planet;
-  planet = new SaturnMoon();
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    planet.rotate();
-  }
-  return true;
-};
-funcs['fake polymorphic'] = function() {
-  var i, planet;
-  planet = {
-    rotations: 0,
-    _type: PlanetType
+(function() {
+  var p;
+  p = new SaturnMoon;
+  return test("polymorphic 3", function() {
+    return p.rotate();
+  });
+})();
+(function() {
+  var MyPlanet, p;
+  MyPlanet = (function() {
+    function MyPlanet() {
+      this.rotations = 0;
+    }
+    MyPlanet.prototype.rotate = function() {
+      return this.rotations++;
+    };
+    return MyPlanet;
+  })();
+  p = new MyPlanet;
+  return test("local polymorphic", function() {
+    return p.rotate();
+  });
+})();
+(function() {
+  var p;
+  p = new Planet;
+  return test("polymorphic", function() {
+    return p.rotate();
+  });
+})();
+(function() {
+  var p;
+  p = new Saturn;
+  return test("polymorphic 2", function() {
+    return p.rotate();
+  });
+})();
+(function() {
+  var x;
+  rotate = function(x) {
+    return x.rotations++;
   };
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    rotatePoly(planet);
-  }
-  return true;
+  x = {
+    rotations: 0
+  };
+  return test("local func", function() {
+    return rotate(x);
+  });
+})();
+rotateG = function(x) {
+  return x.rotations++;
 };
-funcs['inlined single'] = function() {
-  var i, planet_rotations;
-  planet_rotations = 0;
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    planet_rotations++;
-  }
-  return true;
-};
-funcs['no hash lookup'] = function() {
-  var i, planet_rotations;
-  planet_rotations = 0;
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    rotate2(planet_rotations);
-  }
-  return true;
-};
-funcs['simple function'] = function() {
-  var i, planet;
+(function() {
+  var x;
+  x = {
+    rotations: 0
+  };
+  return test("global func", function() {
+    return rotateG(x);
+  });
+})();
+(function() {
+  var end, i, planet, start;
   planet = {
     rotations: 0
   };
+  start = time();
+  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
+    rotateG(planet);
+  }
+  end = time();
+  return log("global func 2: " + (end - start));
+})();
+(function() {
+  var end, i, planet, start;
+  planet = Planet3();
+  start = time();
+  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
+    rotateG(planet);
+  }
+  end = time();
+  return log("factory global other: " + (end - start));
+})();
+planet = Planet3();
+start = time();
+for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
+  rotateG(planet);
+}
+end = time();
+log("factory global other super global: " + (end - start));
+(function() {
+  var i;
+  planet = Planet4();
+  start = time();
+  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
+    rotateG(planet);
+  }
+  end = time();
+  return log("factory global other2: " + (end - start));
+})();
+(function() {
+  var i;
+  rotate = function(x) {
+    return x.rotations++;
+  };
+  planet = {
+    rotations: 0
+  };
+  start = time();
   for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
     rotate(planet);
   }
-  return true;
+  end = time();
+  return log("local func 2: " + (end - start));
+})();
+planet = {
+  rotations: 0
 };
-funcs['closure method'] = function() {
-  var i, planet;
-  planet = Planet2();
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    planet.rotate();
-  }
-  return true;
-};
-funcs['closure method 2'] = function() {
-  var i, planet;
-  planet = Planet3();
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    planet.rotate();
-  }
-  return true;
-};
-funcs['closure method 3'] = function() {
-  var i, planet;
-  planet = Planet4();
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    planet.rotate();
-  }
-  return true;
-};
-funcs['method directly on object'] = function() {
-  var i, planet;
-  planet = {
-    rotations: 0,
-    rotate: function() {
-      return this.rotations++;
-    }
-  };
-  for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
-    planet.rotate();
-  }
-  return true;
-};
-for (name in funcs) {
-  func = funcs[name];
-  console.log(name);
-  time = getTime();
-  func();
-  newTime = getTime();
-  console.log(newTime - time);
+start = time();
+for (i = 0; 0 <= loops ? i <= loops : i >= loops; 0 <= loops ? i++ : i--) {
+  rotateG(planet);
 }
+end = time();
+log("local func 2 super global: " + (end - start));
+(function() {
+  var factory, p;
+  factory = function() {
+    var x;
+    x = {};
+    x.rotations = 0;
+    x.rotate = function() {
+      return x.rotations++;
+    };
+    return x;
+  };
+  p = factory();
+  return test("factory literal", function() {
+    return p.rotate();
+  });
+})();
+(function() {
+  var p;
+  p = Planet3();
+  return test("factory global 2", function() {
+    return p.rotate();
+  });
+})();
+(function() {
+  rotate = function(x) {
+    return x.rotations++;
+  };
+  return (function() {
+    return (function() {
+      var anotherFunc, y;
+      y = 100;
+      anotherFunc = function(x) {};
+      return (function() {
+        var x;
+        x = {
+          rotations: 0
+        };
+        return test("closured func", function() {
+          return rotate(x);
+        });
+      })();
+    })();
+  })();
+})();
+a = 0;
+test("global", function() {
+  return a++;
+});
+(function() {
+  var x;
+  x = 0;
+  return test("nested1", function() {
+    return x++;
+  });
+})();
+(function() {
+  var x;
+  x = 0;
+  return (function() {
+    return test("nested variable closure", function() {
+      return x++;
+    });
+  })();
+})();
+(function() {
+  var x;
+  x = 0;
+  return (function() {
+    return (function() {
+      return (function() {
+        x = 100;
+        return (function() {
+          return (function() {
+            return test("nested variable closure 2", function() {
+              return x++;
+            });
+          })();
+        })();
+      })();
+    })();
+  })();
+})();
+run();
+/*
+
+
+
+getTime = () ->
+  (new Date()).getTime()
+loops = 1e8
+
+
+#whichever proto gets called first wins!
+
+funcs = {}
+
+
+funcs['double proto'] = () ->
+  planet = new Saturn()
+  for i in [0..loops]
+    planet.rotate()
+  return true
+
+funcs['single proto'] = () ->
+  planet = new Planet()
+  for i in [0..loops]
+    planet.rotate()
+  return true
+
+funcs['triple proto'] = () ->
+  planet = new SaturnMoon()
+  for i in [0..loops]
+    planet.rotate()
+  return true
+
+
+funcs['fake polymorphic'] = () ->
+  planet =
+    rotations: 0
+    _type: PlanetType
+  for i in [0..loops]
+    rotatePoly planet
+  return true
+
+funcs['inlined single'] = () ->
+  planet_rotations = 0
+  for i in [0..loops]
+    planet_rotations++
+  return true
+
+funcs['no hash lookup'] = () ->
+  planet_rotations = 0
+  for i in [0..loops]
+    rotate2 planet_rotations
+  return true
+  
+funcs['simple function'] = () ->
+  planet = rotations: 0
+  for i in [0..loops]
+    rotate planet
+  return true
+    
+funcs['closure method'] = () ->
+  planet = Planet2()
+  for i in [0..loops]
+    planet.rotate()
+  return true
+  
+funcs['closure method 2'] = () ->
+  planet = Planet3()
+  for i in [0..loops]
+    planet.rotate()
+  return true
+  
+funcs['closure method 3'] = () ->
+  planet = Planet4()
+  for i in [0..loops]
+    planet.rotate()
+  return true
+
+funcs['method directly on object'] = () ->
+  planet =
+    rotations: 0
+    rotate: () -> @rotations++
+  for i in [0..loops]
+    planet.rotate()
+  return true
+  
+
+    
+for name, func of funcs
+  console.log name
+  time = getTime()
+  func()
+  newTime = getTime()
+  console.log newTime - time
+
+*/

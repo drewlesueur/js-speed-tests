@@ -1,7 +1,8 @@
-#test = (name, test) ->
-
-
-
+log = (x) -> console.log x
+{eachSeries, each, keys, each, wait, interval, time} = _
+tests = {}
+test = (name, func) ->
+  tests[name] = func
 
 class Planet
   constructor: ->
@@ -48,6 +49,168 @@ rotatePoly = (planet) ->
 PlanetType = 
   rotate: (planet) ->
     planet.rotations++
+period = 1000 # 1 second  
+loops = 6e7
+results = {}
+run = () ->
+  eachSeries tests, (func, key, cb=->) ->
+    count = 0
+    start = time()
+    for i in [0..loops]
+      func()
+    end = time()
+    results[key] =  end - start
+    log "#{key}: #{end - start}"
+    cb()
+  , () ->
+
+
+do ->
+  p = new SaturnMoon
+  test "polymorphic 3", () ->
+    p.rotate()
+
+do ->
+  class MyPlanet
+    constructor: ->
+      @rotations = 0
+    rotate: () ->
+      @rotations++
+  p = new MyPlanet
+  test "local polymorphic", () ->
+    p.rotate()
+    
+    
+do ->
+  p = new Planet
+  test "polymorphic", () ->
+    p.rotate()
+
+do ->
+  p = new Saturn
+  test "polymorphic 2", () ->
+    p.rotate()
+
+do ->
+  rotate = (x) ->
+    x.rotations++
+  x = rotations: 0
+  test "local func", ->
+    rotate x
+
+
+  
+rotateG = (x) ->
+  x.rotations++
+   
+do ->
+  x = rotations: 0
+  test "global func", ->
+    rotateG x
+
+do ->
+  planet = rotations: 0
+  start = time()
+  for i in [0..loops]
+    rotateG planet
+  end = time()
+  log "global func 2: #{end - start}"
+do ->
+  planet = Planet3()
+  start = time()
+  for i in [0..loops]
+    rotateG planet
+  end = time()
+  log "factory global other: #{end - start}"
+planet = Planet3()
+start = time()
+for i in [0..loops]
+  rotateG planet
+end = time()
+log "factory global other super global: #{end - start}"
+do ->
+  planet = Planet4()
+  start = time()
+  for i in [0..loops]
+    rotateG planet
+  end = time()
+  log "factory global other2: #{end - start}"
+
+do ->
+  rotate = (x) ->
+    x.rotations++
+  planet = rotations: 0
+  start = time()
+  for i in [0..loops]
+    rotate planet
+  end = time()
+  log "local func 2: #{end - start}"
+planet = rotations: 0
+start = time()
+for i in [0..loops]
+  rotateG planet
+end = time()
+log "local func 2 super global: #{end - start}"
+
+do ->
+  factory = () ->
+    x = {}
+    x.rotations = 0
+    x.rotate = () ->
+     x.rotations++ 
+    x
+  p = factory() 
+  test "factory literal", () -> p.rotate()
+    
+do ->
+  p = Planet3() #factory
+  test "factory global 2", () -> p.rotate()
+    
+do ->
+  rotate = (x) ->
+    x.rotations++
+  do ->
+    do ->
+      y = 100
+      anotherFunc = (x) ->
+      do ->
+        x = rotations: 0
+        test "closured func", ->
+          rotate x
+
+
+
+a = 0
+test "global", () ->
+  a++  
+
+do ->
+  x = 0
+  test "nested1", -> x++
+
+do () ->
+  x = 0
+  do () ->
+    test "nested variable closure", () ->
+      x++
+
+do ->
+  x = 0
+  do ->
+    do ->
+      do ->
+        x = 100
+        do ->
+          do ->
+            test "nested variable closure 2", () ->
+              x++
+             
+
+
+
+run()
+
+###
 
 
 
@@ -141,4 +304,4 @@ for name, func of funcs
   newTime = getTime()
   console.log newTime - time
 
-    
+###  
